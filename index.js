@@ -27,8 +27,6 @@ const messages = [
 ];
 
 async function main() {
-    console.log("Starting main function...");
-    console.log("Initial messages:", JSON.stringify(messages, null, 2));
     console.log("Tools:", JSON.stringify(tools, null, 2));
 
     try {
