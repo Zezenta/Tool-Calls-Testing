@@ -7,7 +7,7 @@ const productos = [
     precioDescuento: 15,
     descuento: 50,
     imagen: "2_b5b088c4-8139-4b51-b29c-1b15842079a9.webp",
-    subcategorias: ["accesorios_gimnasio", "munequera_gimnasio"],
+    subcategorias: ["accesorios_gimnasio"],
   },
   {
     nombre: "Soporte magnético para teléfono / Gym Buddy (Especial Gym)",
@@ -15,7 +15,7 @@ const productos = [
     precioDescuento: 15,
     descuento: 50,
     imagen: null,
-    subcategorias: ["accesorios_gimnasio", "soporte_telefono_gimnasio"],
+    subcategorias: ["accesorios_gimnasio"],
   },
   {
     nombre: "Protector de Barra / Barbell pad para Gimnasio",
@@ -23,7 +23,7 @@ const productos = [
     precioDescuento: 15,
     descuento: 50,
     imagen: "3.2png.webp",
-    subcategorias: ["accesorios_gimnasio", "protector_barra_gimnasio"],
+    subcategorias: ["accesorios_gimnasio"],
   },
   {
     nombre: "Correas de tobillos / Ankle Straps para Gimnasio",
@@ -31,7 +31,7 @@ const productos = [
     precioDescuento: 20,
     descuento: 50,
     imagen: "1_c7909a89-8de7-4db6-a460-baea88d2cebc.webp",
-    subcategorias: ["accesorios_gimnasio", "correas_tobillo_gimnasio"],
+    subcategorias: ["accesorios_gimnasio"],
   },
 
   // --- ACERO INOXIDABLE ---
@@ -347,7 +347,7 @@ const productos = [
   precioDescuento: 12.5,
   descuento: 50,
   imagen: "CUERO2.2_ac0917b0-32c5-46cf-9146-03f371612dc8.webp",
-  subcategorias: ["brazaletes_acero", "brazaletes_colores"],
+  subcategorias: ["brazaletes_acero"],
 },
 {
   nombre: "Brazalete Eclipse Titanio",
@@ -355,7 +355,7 @@ const productos = [
   precioDescuento: 12.5,
   descuento: 50,
   imagen: "1_03264f17-5905-4838-ae46-3120959160cd.webp",
-  subcategorias: ["brazaletes_acero", "brazaletes_titanio"],
+  subcategorias: ["brazaletes_acero"],
 },
 //COLECCION DAMA
 {
@@ -407,9 +407,8 @@ const productos = [
   imagen: "165.webp",
   subcategorias: [
     "cadenas_dama",
-    "cadenas_pareja",
-    "cadenas_personalizadas",
-    "accesorios_dama"
+    "accesorios_dama",
+    "cadenas_dije"
   ],
 },
 {
@@ -419,9 +418,9 @@ const productos = [
   descuento: 50,
   imagen: "CADENA-PAREJA.webp",
   subcategorias: [
-    "cadenas_pareja",
     "cadenas_dama",
-    "accesorios_dama"
+    "accesorios_dama",
+    "cadenas_dije"
   ],
 },
 {
@@ -703,7 +702,7 @@ const productos = [
     descuento: 50,
     imagen: "7_9554beb1-9b51-488a-b254-f1e82421ee6f.webp",
     subcategorias: [
-      "pulseras_neopreno",
+        "pulseras_personalizadas",
       "pulseras_tejidas"
     ],
   },
@@ -1173,7 +1172,7 @@ const productos = [
     "precioDescuento": 12.50,
     "descuento": 50,
     "imagen": "Copiade3.webp",
-    "subcategorias": ["mouse_pad"]
+    "subcategorias": ["mousepads"]
   },
   {
     "nombre": "LLavero de Cuero café y Acero Inoxidable",
@@ -1234,18 +1233,228 @@ console.log(
 
 
 
-// prettier-ignore
-/**
- * Devuelve el listado único de todas las subcategorías.
- *
- * @returns {Array<string>}
- */
+function getAllSubcategoriesWithCount(productos) {
+  const counts = {};
+
+  productos.forEach((producto) => {
+    if (Array.isArray(producto.subcategorias)) {
+      producto.subcategorias.forEach((subcat) => {
+        counts[subcat] = (counts[subcat] || 0) + 1;
+      });
+    }
+  });
+
+  // Si quieres un array de objetos con nombre y cantidad:
+  const result = Object.entries(counts).map(([nombre, cantidad]) => ({
+    nombre,
+    cantidad,
+  }));
+
+  return result;
+}
+
 function getAllSubcategories() {
   const all = productos.flatMap((p) =>
     Array.isArray(p.subcategorias) ? p.subcategorias : []
   );
   return Array.from(new Set(all));
 }
+console.log(getAllSubcategoriesWithCount(productos));
 
 // Ejemplo:
 //console.log(getAllSubcategories());
+
+const fetch = require('node-fetch'); // npm install node-fetch@2
+require("dotenv").config();
+
+// Suponemos que ya tienes en el archivo:
+// const productos = [ ... ];
+// function getProductsBySubcategories(categorias) { ... }
+
+// Configuración
+const accessToken = process.env.OPENAI_API_KEY;
+const apiUrl = 'https://api.openai.com/v1/chat/completions';
+
+// Definición de la tool para OpenAI
+const tools = [
+  {
+    type: "function",
+    function: {
+      name: "getProductsBySubcategories",
+      description: "Devuelve todos los productos que coincidan con al menos una de las subcategorías dadas. No repite productos y no incluye la propiedad subcategorias en el resultado. La propiedad imagen incluye el link hardcoded al inicio. Subcategorías válidas: combos, combos_cuero, pulseras_deportivas, llaveros_placa, brazaletes_cuero, etc.",
+      parameters: {
+        type: "object",
+        properties: {
+          categorias: {
+            type: "array",
+            items: { type: "string" },
+            description: `Lista de subcategorías a buscar. Subcategorías válidas: ["accesorios_gimnasio","cadenas_acero","cadenas_dije","cadenas_religiosas","cadenas_placa","cadenas_cruz","cadenas_deportivas","cadenas_gym","brazaletes_cuero","brazaletes_trenzados","brazaletes_acero","cadenas_dama","accesorios_dama","combos_dama","combos_cuero","pulseras_piedra","pulseras_personalizadas","collares_piedra","trilogias_pulseras","pulseras_tejidas","cadenas_fotograbado","llaveros_fotograbado","llaveros_personalizados","placas_mascotas","brazaletes_personalizados","pulseras_deportivas","llaveros_cuero","estuches","mousepads"]`
+          }
+        },
+        required: ["categorias"]
+      }
+    }
+  }
+];
+
+// Mensajes de prueba (mock)
+const messages = [
+  {
+    role: "system",
+    content: `
+        [FORMATO DE SALIDA]
+        Responde SIEMPRE SOLO con un JSON puro que cumpla exactamente este esquema:
+        {
+        "type": "text" | "textimage",
+        "text": "[mensaje] (máx. 4 líneas)",
+        "imgUrl": "https://clubentrepanas.com/cdn/shop/files/[NOMBRE_IMAGEN].jpg"  // Solo si type="textimage"
+        }
+        No añadas texto introductorio, explicaciones, comillas invertidas ni ningún otro carácter antes o después del JSON.
+
+        Cuando recibas productos de la función getProductsBySubcategories, responde SOLO con el JSON en el formato indicado, usando la información del producto principal o el más relevante. Si no hay productos, responde con el mensaje de error en JSON como se indica abajo.
+
+        [ROL]
+        Eres un asistente de ventas especializado en pulseras, collares y fotograbados. Tu estilo es entusiasta y profesional, con lenguaje coloquial pero respetuoso. Nunca inventes productos o precios, solo responde sobre productos reales de la tienda. Estás atendiendo a clientes por medio de chats de Instagram, Facebook, y WhatsApp.
+        Usa lenguaje neutro pero latinoamericano.
+
+        [INFORMACIÓN DE LA TIENDA]
+        Nombre: Club Entre Panas
+        Propietario: Carlos González
+        Ubicación: Detras del C.C, Mall del Sol, Bonanza Plaza Comercial, Guayaquil 090513
+        Sitio web: https://clubentrepanas.com
+        Whatsapp: 0993845394
+        Horarios de atención: Lunes a Sábado de 10:00 a 20:00, Domingo cerrado.
+
+        [FLUJO E INSTRUCCIONES]
+        - Si el usuario pide información de productos o de un producto en específico, usa la función getProductsBySubcategories.
+        - Responde brevemente, solo con información del producto por el cual el usuario preguntó.
+        - Si el usuario pregunta por productos parecidos o alternativas, responde con productos parecidos.
+        - No uses lenguaje markdown, solo texto natural en el campo "text".
+        - Ten en cuenta que tienes la libertad de responderle al usuario de manera que suene como un ser humano natural.
+        - Tienes que seguir el formato JSON especificado para poder manejar bien los mensajes.
+        - Por sobre todas las cosas, tienes que brindar información útil para el comprador, y no tienes que inventar información.
+
+        [MANEJO DE ERRORES]
+        Si no hay productos, responde:
+        {
+        "type": "text",
+        "text": "Aquel producto no lo tenemos disponible, hay algún otro producto que le pueda interesar?"
+        }
+
+        Si la pregunta es off-topic, responde:
+        {
+        "type": "text",
+        "text": "¿Te ayudo con algo de nuestra colección?"
+        }
+
+        [EJEMPLOS DE RESPUESTA VÁLIDA]
+        "Cuánto cuesta la pulsera de fuerza en titanio?":
+        {
+        "type": "textImage",
+        "text": "La Pulsera 'Fuerza' en titanio cuesta $24.99",
+        "imgUrl": "https://clubentrepanas.com/cdn/shop/files/pulsera-fuerza.jpg"
+        }
+        "Tienen pulseras de cuero?":
+        {
+        "type": "text",
+        "text": "Claro, tenemos varias pulseras de cuero. Le gustaría ver alguna en particular?"
+        }
+        "De pulseras qué tienen?":
+        {
+        "type": "text",
+        "text": "Tenemos una amplia variedad de pulseras, incluyendo de cuero, acero, piedra y personalizadas. Busca alguna en específico?"
+        }
+        "Dónde están ubicados?":
+        {
+        "type": "text",
+        "text": "Estamos ubicados detrás del C.C, Mall del Sol, en Bonanza Plaza Comercial, Guayaquil 090513."
+        }
+    `
+  },
+  {
+    role: "user",
+    content: "Cuál es el número de whatsapp?"
+  }
+];
+
+// Función principal de test
+async function testFunctionCalling() {
+  // 1. Primer request: IA puede decidir llamar a la función
+  const response = await fetch(apiUrl, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o',
+      messages: messages,
+      tools: tools,
+      response_format: { type: "json_object" }
+    })
+  });
+
+  const data = await response.json();
+  console.log(data);
+  const choice = data.choices[0].message;
+
+  // 2. Si hay tool_call, ejecuta la función y responde a la IA
+  if (choice.tool_calls) {
+    for (const toolCall of choice.tool_calls) {
+        console.log(toolCall)
+      if (toolCall.function.name === "getProductsBySubcategories") {
+        const args = JSON.parse(toolCall.function.arguments);
+        const productosEncontrados = getProductsBySubcategories(args.categorias);
+        console.log("Productos pedidos por la IA:");
+        console.log(args.categorias);
+
+        // 3. Crea el mensaje de tool
+        const toolMessage = {
+          tool_call_id: toolCall.id,
+          role: "tool",
+          name: "getProductsBySubcategories",
+          content: JSON.stringify(productosEncontrados)
+        };
+
+        // 4. Prepara el nuevo historial de mensajes
+        const newMessages = [
+          ...messages,
+          {
+            role: "assistant",
+            content: null,
+            tool_calls: [toolCall]
+          },
+          toolMessage
+        ];
+
+        // 5. Llama de nuevo a la API para que la IA genere la respuesta final
+        const finalResponse = await fetch(apiUrl, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o',
+            messages: newMessages
+          })
+        });
+
+        const finalData = await finalResponse.json();
+        const finalText = finalData.choices[0].message.content;
+
+        // 6. Muestra la respuesta final
+        console.log("Respuesta final de la IA:");
+        console.log(finalText);
+        return;
+      }
+    }
+  } else {
+    // No hubo tool_call, respuesta normal
+    console.log("Respuesta directa de la IA:");
+    console.log(choice.content);
+  }
+}
+
+// Ejecuta el test
+testFunctionCalling();
